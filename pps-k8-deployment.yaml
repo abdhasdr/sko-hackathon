@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prediction-server
+spec:
+  selector:
+    matchLabels:
+      app: pps
+  template:
+    metadata:
+      labels:
+        app: pps
+    spec:
+      containers:
+      - name: pps-container
+        imagePullPolicy: Always
+        image: 815552766012.dkr.ecr.us-west-2.amazonaws.com/lab/team25:latest
+        env:
+        - name: PREDICTION_API_MODEL_REPOSITORY_PATH
+          value: "/tmp/team25_model.mlpkg"
+        ports:
+        - containerPort: 80
+          protocol: TCP

@@ -1,0 +1,39 @@
+datarobot/datarobot-portable-prediction-api:8.0.0-r1730
+
+curl -X POST http://localhost:8080/predictions \\n    -H "Content-Type: text/csv" \\n    --data-binary @/Users/abdihassan/Downloads/test_dataset.csv
+
+docker run \
+  -p 8080:8080 \
+  -v /Users/abdihassan/Downloads/models:/opt/ml/model/ \
+  -e PREDICTION_API_MODEL_REPOSITORY_PATH="/opt/ml/model/group25_model.mlpkg" \
+  datarobot/datarobot-portable-prediction-api:8.0.0-r1730
+
+
+
+minikube mount /Users/abdihassan/Downloads/models:/opt/ml/model/
+kubectl apply -f pps-k8-deployment.yaml  
+kubectl expose deployment prediction-server --type=ClusterIP --target-port=80 --port=80
+kubectl delete svc prediction-server
+minikube tunnel 
+kubectl port-forward svc/prediction-server 8080:80
+
+
+kubectl exec -it pps-84475ff55-fwhs9  -- /bin/bash
+
+kubectl cp /Users/abdihassan/Downloads/models/portable_model_training.mlpkg dr-pps-6459446fd5-sflks:/tmp
+
+-------
+
+Team25:
+
+docker run \
+  -p 8080:8080 \
+  -e PREDICTION_API_MODEL_REPOSITORY_PATH="/tmp/portable_model_training.mlpkg" \
+  team25
+
+
+docker build -t team25 .
+docker image tag team25 815552766012.dkr.ecr.us-west-2.amazonaws.com/lab/team25:latest   
+docker image push 815552766012.dkr.ecr.us-west-2.amazonaws.com/lab/team25  
+kubectl delete -f pps-k8-deployment.yaml 
+kubectl apply -f mlops.yaml 
